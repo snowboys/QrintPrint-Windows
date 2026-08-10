@@ -1,18 +1,18 @@
-# QringPrint-Windows
-本项目使用了 Thisko/QrintPrint的代码
-作为windows客户端的底层支持。感谢 Thisko 开源的打印解决方案，为本项目AI开发(codex+deepseek v4 flash)提供了极大的便利。
+# QrintPrint · 小印热敏打印
 
-面向 58mm 蓝牙热敏打印机的 Windows 桌面程序。
+面向 58mm 蓝牙热敏打印机的 Windows程序。
 支持错题、便签、标签打印：文字排版、图片抖动、条码/二维码、自定义画布、
 设备体检与打印历史。
+
+本项目底层参考了 Thisko 开源的 QrintPrint 打印解决方案，在此致谢。
 
 ## 快速开始
 
 1. 系统蓝牙中配对打印机（配对后 Windows 会生成一个“传出”的虚拟 COM 口，
-   一般是 COM4~COM8 之一）。
-2. 双击 `run.bat`，或运行 `python qrintprint.py`。
+   一般是 COM3~COM8 之一）。
+2. 双击 `run.bat`，或运行 'dist\QrintPrint\QrintPrint.exe`。
 3. 顶部选择蓝牙端口（默认 COM3），点「连接」。
-4. 在任一页签排版内容，点「打印」。
+4. 在任一页签排版内容，点「打印」,打印纸可通用喵喵机热敏纸。
 
 依赖已随项目放在 `vendor/` 目录，程序启动时自动加载，**无需安装任何东西**。
 
@@ -44,7 +44,8 @@
 - 电量 / 缺纸 / 开盖 / 过热实时监测（顶部状态灯）
 - 打印前自动体检，故障时拦截并给出原因
 - 打印期间暂停状态轮询，避免查询字节混入打印数据流
-- 冷启动自动重连上次设备
+- 冷启动自动重连上次设备（连接在后台线程执行、写入带超时，
+  蓝牙口未连接或无响应时只提示失败，不会卡死界面）
 
 ### 本地数据
 - 打印历史持久化（含 384 点宽预览与缩略图），一键重新打印
@@ -62,33 +63,40 @@
 ```
 QrintPrint-Windows/
 ├── qrintprint.py        # 入口
+├── qrintprint.spec      # PyInstaller 打包配置
+├── run.bat              # 源码运行脚本
+├── build.bat            # 一键打包 exe
+├── requirements.txt
 ├── app/
-│   ├── driver.py        # 打印机协议驱动（SPP 串口）
+│   ├── driver.py        # 打印机协议驱动（SPP 串口，写入超时保护）
 │   ├── device.py        # 设备管理：连接/轮询/体检/打印线程
 │   ├── render.py        # 文字/图片/条码渲染与抖动
 │   ├── canvas.py        # 自定义画布
 │   ├── storage.py       # 模板与历史持久化
 │   ├── ui.py            # 主窗口
 │   └── config.py        # 配置
-├── vendor/              # 自包含第三方依赖
+├── vendor/              # 自包含第三方依赖（随项目提供）
 ├── data/                # 运行期数据（自动创建）
-├── qring-spp.py         # 原 CLI 驱动（保留）
-├── requirements.txt
-└── run.bat
+├── tests/               # 冒烟测试（无需打印机）
+├── img/                 # 界面截图
+└── dist/QrintPrint/     # 已打包产物（可整体拷贝到其它电脑运行）
 ```
 
-## 打包为 exe（可选）
+## 打包为 exe
 
-项目已附带打包配置，安装 PyInstaller 后执行：
+项目已随附打包产物：`dist/QrintPrint/QrintPrint.exe`，整个
+`dist/QrintPrint/` 文件夹（exe + `_internal/` + `data/`）可整体拷贝到
+任意 Windows 10/11 64 位电脑直接运行，无需安装 Python 或任何依赖。
+
+重新打包时，双击 `build.bat`，或手动执行：
 
 ```
 pip install pyinstaller
-pyinstaller qrintprint.spec
+pyinstaller --noconfirm qrintprint.spec
 ```
 
-产物在 `dist/QrintPrint/`，双击 `QrintPrint.exe` 即可运行，
-可整体拷贝到任意 Windows 机器。打包后数据（配置/模板/历史）自动
-存放在 exe 同级的 `data/` 目录，与源码运行方式一致。
+产物在 `dist/QrintPrint/`。打包后数据（配置/模板/历史）自动存放在
+exe 同级的 `data/` 目录，与源码运行方式一致。
 
 验证打包产物可正常启动：
 
@@ -98,13 +106,17 @@ QrintPrint.exe --selftest
 
 自检会构建完整主窗口后自动退出；若同级 `data/selftest.ok` 文件生成即正常。
 
+> 提示：程序未做代码签名，首次在其它电脑运行时，Windows SmartScreen
+> 可能提示「未知发布者」，点「更多信息 → 仍要运行」即可。
+
 ## 说明
 
-- 打印协议见 `qring-spp.py`。
-  与官方 SDK 字节级兼容：384 点宽、GS v 0 光栅、0xAA 打印完成 ACK。
+- 打印协议见 `app/driver.py`，与官方 SDK 字节级兼容：
+  384 点宽、GS v 0 光栅、0xAA 打印完成 ACK。
 - 电量显示为启发式换算：固件返回 0~100 时直接使用，否则按电压估算。
 - 若 COM 口无法打开，请确认打印机已开机、蓝牙已配对，并在系统
   “设备管理器 → 端口”中确认虚拟串口号。
 
-  ## 界面
-| <img src="img/文字打印.png"  /> | <img src="img/图片打印.png"/> | <img src="img/二维码.png" /> | <img src="img/打印历史.png"  /> | 
+## 界面
+
+| <img src="img/文字打印.png"  /> | <img src="img/图片打印.png"/> | <img src="img/二维码.png" /> | <img src="img/打印历史.png"  /> |
