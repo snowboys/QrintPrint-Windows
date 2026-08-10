@@ -1,6 +1,8 @@
-# QrintPrint · 小印热敏打印
+# QringPrint-Windows
+本项目使用了 Thisko/QrintPrint的代码
+ 作为windows客户端的底层支持。感谢 Thisko 开源的打印解决方案，为本项目开发的提供了极大的便利。
 
-面向 58mm 蓝牙热敏打印机（小印 / Qring / BeePrt BY）的 Windows 桌面程序。
+面向 58mm 蓝牙热敏打印机的 Windows 桌面程序。
 支持错题、便签、标签打印：文字排版、图片抖动、条码/二维码、自定义画布、
 设备体检与打印历史。
 
@@ -98,7 +100,7 @@ QrintPrint.exe --selftest
 
 ## 说明
 
-- 打印协议来自对 `com.zxxk.xiaoyin.App` 的分析（见 `qring-spp.py`），
+- 打印协议见 `qring-spp.py`。
   与官方 SDK 字节级兼容：384 点宽、GS v 0 光栅、0xAA 打印完成 ACK。
 - 电量显示为启发式换算：固件返回 0~100 时直接使用，否则按电压估算。
 - 若 COM 口无法打开，请确认打印机已开机、蓝牙已配对，并在系统
