@@ -118,3 +118,7 @@ QrintPrint.exe --selftest
 ## 界面
 
 | <img src="img/文字打印.png"  /> | <img src="img/图片打印.png"/> | <img src="img/二维码.png" /> | <img src="img/打印历史.png"  /> |
+
+
+## 免责声明
+本软件仅供学习与个人使用，使用风险由使用者自行承担，开发者对因使用本软件造成的任何损失概不负责。如您认为本实现侵害了您的合法权益，请联系作者下架。
