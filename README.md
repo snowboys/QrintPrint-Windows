@@ -105,3 +105,6 @@ QrintPrint.exe --selftest
 - 电量显示为启发式换算：固件返回 0~100 时直接使用，否则按电压估算。
 - 若 COM 口无法打开，请确认打印机已开机、蓝牙已配对，并在系统
   “设备管理器 → 端口”中确认虚拟串口号。
+
+  ## 界面
+| <img src="img/文字打印.png"  /> | <img src="img/图片打印.png"/> | <img src="img/二维码.png" /> | <img src="img/打印历史.png"  /> | 
