@@ -1,9 +1,0 @@
-{
-  "last_port": "COM4",
-  "thickness": 1,
-  "feed_before": 10,
-  "feed_after": 100,
-  "poll_interval_s": 3.0,
-  "auto_reconnect": true,
-  "window_geometry": null
-}
