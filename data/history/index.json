@@ -1,0 +1,172 @@
+[
+  {
+    "id": "e092c4c7af15",
+    "kind": "barcode",
+    "title": "QRCode: QrintPrint-2026",
+    "params": {
+      "kind": "barcode",
+      "barcode_kind": "QRCode",
+      "data": "QrintPrint-2026",
+      "error_correction": "M",
+      "border": 2,
+      "write_text": false,
+      "dither": "none",
+      "threshold": 160
+    },
+    "ts": 1786365038.6736343,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\e092c4c7af15.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\e092c4c7af15.png"
+  },
+  {
+    "id": "17e3ac5c6fb1",
+    "kind": "text",
+    "title": "欢迎使用 QrintPrint 小印 热…",
+    "params": {
+      "kind": "text",
+      "threshold": 200,
+      "dither": "none",
+      "text": "欢迎使用 QrintPrint 小印\n热敏打印机 58mm",
+      "font_family": "微软雅黑",
+      "font_size": 24,
+      "bold": true,
+      "italic": false,
+      "underline": false,
+      "char_spacing": 0,
+      "line_spacing": 8,
+      "margin": 8,
+      "align": "left"
+    },
+    "ts": 1786365025.5830772,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\17e3ac5c6fb1.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\17e3ac5c6fb1.png"
+  },
+  {
+    "id": "28a05f0358fc",
+    "kind": "image",
+    "title": "btn_qz_open.png",
+    "params": {
+      "kind": "image",
+      "path": "E:/照片/007/燈火闌珊 [http___540808609.qzone.qq.com]_files/btn_qz_open.png",
+      "dither": "none",
+      "threshold": 128
+    },
+    "ts": 1786365016.47851,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\28a05f0358fc.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\28a05f0358fc.png"
+  },
+  {
+    "id": "91c34b654b1c",
+    "kind": "text",
+    "title": "欢迎使用 QrintPrint 小印 热…",
+    "params": {
+      "kind": "text",
+      "threshold": 200,
+      "dither": "none",
+      "text": "欢迎使用 QrintPrint 小印\n热敏打印机 58mm",
+      "font_family": "微软雅黑",
+      "font_size": 24,
+      "bold": true,
+      "italic": false,
+      "underline": false,
+      "char_spacing": 0,
+      "line_spacing": 8,
+      "margin": 8,
+      "align": "left"
+    },
+    "ts": 1786364932.6905928,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\91c34b654b1c.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\91c34b654b1c.png"
+  },
+  {
+    "id": "341d1ad51ab8",
+    "kind": "text",
+    "title": "欢迎使用 QrintPrint 小印 热…",
+    "params": {
+      "kind": "text",
+      "threshold": 200,
+      "dither": "none",
+      "text": "欢迎使用 QrintPrint 小印\n热敏打印机 58mm",
+      "font_family": "微软雅黑",
+      "font_size": 24,
+      "bold": false,
+      "italic": false,
+      "underline": false,
+      "char_spacing": 0,
+      "line_spacing": 8,
+      "margin": 8,
+      "align": "left"
+    },
+    "ts": 1786364923.238159,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\341d1ad51ab8.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\341d1ad51ab8.png"
+  },
+  {
+    "id": "ea8994af90ac",
+    "kind": "barcode",
+    "title": "QRCode: QrintPrint-2026",
+    "params": {
+      "kind": "barcode",
+      "barcode_kind": "QRCode",
+      "data": "QrintPrint-2026",
+      "error_correction": "M",
+      "border": 2,
+      "write_text": false,
+      "dither": "none",
+      "threshold": 160
+    },
+    "ts": 1786364913.2567403,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\ea8994af90ac.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\ea8994af90ac.png"
+  },
+  {
+    "id": "87842c64aa50",
+    "kind": "image",
+    "title": "psb (25).jpg",
+    "params": {
+      "kind": "image",
+      "path": "E:/照片/007/psb (25).jpg",
+      "dither": "none",
+      "threshold": 128
+    },
+    "ts": 1786364902.7544806,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\87842c64aa50.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\87842c64aa50.png"
+  },
+  {
+    "id": "f2f22343388e",
+    "kind": "image",
+    "title": "手写_2026-05-30_134855.jpg",
+    "params": {
+      "kind": "image",
+      "path": "C:/Users/chenx/Pictures/手写_2026-05-30_134855.jpg",
+      "dither": "none",
+      "threshold": 128
+    },
+    "ts": 1786364831.572831,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\f2f22343388e.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\f2f22343388e.png"
+  },
+  {
+    "id": "37e342995802",
+    "kind": "text",
+    "title": "欢迎使用 QrintPrint 小印 热…",
+    "params": {
+      "kind": "text",
+      "threshold": 200,
+      "dither": "none",
+      "text": "欢迎使用 QrintPrint 小印\n热敏打印机 58mm",
+      "font_family": "微软雅黑",
+      "font_size": 24,
+      "bold": false,
+      "italic": false,
+      "underline": false,
+      "char_spacing": 0,
+      "line_spacing": 8,
+      "margin": 8,
+      "align": "left"
+    },
+    "ts": 1786364807.461484,
+    "preview": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\previews\\37e342995802.png",
+    "thumb": "C:\\Users\\chenx\\Desktop\\QrintPrint-Windows\\data\\history\\thumbs\\37e342995802.png"
+  }
+]

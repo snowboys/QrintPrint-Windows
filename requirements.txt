@@ -1,0 +1,8 @@
+# QrintPrint 依赖
+# 已随项目打包在 vendor/ 目录，正常情况下无需手动安装。
+# 如需重建 vendor： pip install --target vendor -r requirements.txt
+PySide6-Essentials>=6.8
+pyserial>=3.5
+pillow>=10.0
+qrcode>=8.0
+python-barcode>=0.15
