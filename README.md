@@ -1,6 +1,6 @@
 # QringPrint-Windows
 本项目使用了 Thisko/QrintPrint的代码
- 作为windows客户端的底层支持。感谢 Thisko 开源的打印解决方案，为本项目开发的提供了极大的便利。
+ 作为windows客户端的底层支持。感谢 Thisko 开源的打印解决方案，为本项目AI开发(codex+deepseek v4 flash)提供了极大的便利。
 
 面向 58mm 蓝牙热敏打印机的 Windows 桌面程序。
 支持错题、便签、标签打印：文字排版、图片抖动、条码/二维码、自定义画布、
