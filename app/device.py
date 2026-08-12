@@ -82,6 +82,84 @@ class DeviceManager(QObject):
                 out.append((dev, label))
         return out
 
+    @staticmethod
+    def _paired_bt_names():
+        """从注册表读取已配对经典蓝牙设备：{MAC(大写十六进制): 友好名}。
+
+        仅 Windows 有效；无 winreg / 无权限 / 读取失败均返回 {}。
+        """
+        names = {}
+        try:
+            import winreg
+        except ImportError:
+            return names
+        path = (r"SYSTEM\CurrentControlSet\Services"
+                r"\BTHPORT\Parameters\Devices")
+        try:
+            root = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
+        except OSError:
+            return names
+        try:
+            i = 0
+            while True:
+                try:
+                    mac = winreg.EnumKey(root, i)
+                except OSError:
+                    break
+                i += 1
+                try:
+                    sub = winreg.OpenKey(root, mac)
+                    val, _typ = winreg.QueryValueEx(sub, "Name")
+                    winreg.CloseKey(sub)
+                except OSError:
+                    continue
+                if isinstance(val, (bytes, bytearray)):
+                    name = bytes(val).split(b"\x00")[0].decode(
+                        "utf-8", "replace")
+                else:
+                    name = str(val)
+                name = name.strip()
+                if name:
+                    names[mac.upper()] = name
+        finally:
+            winreg.CloseKey(root)
+        return names
+
+    @staticmethod
+    def list_qring_printers():
+        """枚举名称以 “Qring” 开头的已配对蓝牙打印机。
+
+        返回 [{"port": "COM3"|None, "name": "Qring_50F0",
+                "mac": "5A10350E50F0"}, ...]，按“有端口在前 + 名称”排序。
+        已配对但尚未生成虚拟串口的设备 port 为 None。
+        任何异常都降级为 []，绝不抛出到 UI。
+        """
+        try:
+            names = DeviceManager._paired_bt_names()
+            qring = {mac: nm for mac, nm in names.items()
+                     if nm.lower().startswith("qring")}
+            if not qring:
+                return []
+            # COM 口的 hwid 内嵌蓝牙 MAC，用它把设备配到串口
+            port_by_mac = {}
+            try:
+                from serial.tools import list_ports
+                for p in list_ports.comports():
+                    hwid = (p.hwid or "").upper()
+                    for mac in qring:
+                        if mac in hwid:
+                            port_by_mac.setdefault(mac, p.device)
+            except Exception:
+                pass
+            out = []
+            for mac, nm in qring.items():
+                out.append({"port": port_by_mac.get(mac),
+                            "name": nm, "mac": mac})
+            out.sort(key=lambda d: (d["port"] is None, d["name"].lower()))
+            return out
+        except Exception:
+            return []
+
     def connect(self, port):
         """异步连接指定串口；结果通过 stateChanged/message 信号通知。
 

@@ -323,6 +323,13 @@ BARCODE_KINDS = [
     "UPCA",
     "ITF",
     "Codabar",
+    "EAN14",
+    "JAN",
+    "ISBN13",
+    "ISBN10",
+    "ISSN",
+    "GS1-128",
+    "PZN",
 ]
 
 _BARCODE_NAME = {
@@ -334,7 +341,19 @@ _BARCODE_NAME = {
     "UPCA": "upca",
     "ITF": "itf",
     "Codabar": "codabar",
+    "EAN14": "ean14",
+    "JAN": "jan",
+    "ISBN13": "isbn13",
+    "ISBN10": "isbn10",
+    "ISSN": "issn",
+    "GS1-128": "gs1_128",
+    "PZN": "pzn",
 }
+
+
+def is_1d_barcode(kind):
+    """是否为一维码（QRCode 之外的都是一维码，可显示数字）。"""
+    return kind != "QRCode"
 
 
 def validate_barcode(kind, data):
@@ -359,8 +378,18 @@ def validate_barcode(kind, data):
 
 def _barcode_hint(kind, data, exc):
     msg = str(exc)
-    if kind in ("EAN13", "EAN8", "UPCA"):
+    if kind in ("EAN13", "EAN8", "UPCA", "JAN"):
         return "需为对应位数的数字（可自动补校验位）"
+    if kind == "EAN14":
+        return "EAN14 需要 13~14 位数字（可自动补校验位）"
+    if kind in ("ISBN13", "ISBN10"):
+        return "请输入 ISBN 数字（10 位 / 13 位，可含校验位）"
+    if kind == "ISSN":
+        return "ISSN 需要 8 位数字"
+    if kind == "PZN":
+        return "PZN 需要 6~7 位数字"
+    if kind == "GS1-128":
+        return "GS1-128 需按应用标识符(AI)拼接的数字串"
     if kind == "ITF":
         return "ITF 需要偶数位数字"
     if kind == "Code39":
@@ -368,7 +397,7 @@ def _barcode_hint(kind, data, exc):
     return f"内容不合法：{msg or exc.__class__.__name__}"
 
 
-def render_1d_image(kind, data, write_text=True):
+def render_1d_image(kind, data, write_text=False):
     """一维码 -> (灰度图或 None, 错误信息)。"""
     data = (data or "").strip()
     name = _BARCODE_NAME.get(kind)
@@ -434,7 +463,7 @@ def render_qr_image(data, error_correction="M", border=2):
 
 
 def render_barcode_image(kind, data, error_correction="M", border=2,
-                         write_text=True):
+                         write_text=False):
     """条码统一入口 -> (灰度图或 None, 错误信息)。"""
     if kind == "QRCode":
         return render_qr_image(data, error_correction, border)

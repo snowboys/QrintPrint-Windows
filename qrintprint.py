@@ -20,20 +20,40 @@ def _setup_vendor():
 
 _setup_vendor()
 
-from app.config import DATA_DIR, ensure_dirs  # noqa: E402
+from app.config import BASE_DIR, DATA_DIR, ensure_dirs  # noqa: E402
+from app.theme import apply_theme    # noqa: E402
 from app.ui import MainWindow        # noqa: E402
 from PySide6.QtCore import QTimer    # noqa: E402
+from PySide6.QtGui import QIcon      # noqa: E402
 from PySide6.QtWidgets import QApplication  # noqa: E402
+
+
+def _app_icon():
+    # onefile 打包时资源解压到 sys._MEIPASS，其次才是 exe / 源码目录
+    roots = []
+    bundle = getattr(sys, "_MEIPASS", None)
+    if bundle:
+        roots.append(bundle)
+    roots.append(BASE_DIR)
+    for root in roots:
+        for name in ("QrintPrint.ico", os.path.join("img", "QrintPrint.ico")):
+            path = os.path.join(root, name)
+            if os.path.exists(path):
+                return QIcon(path)
+    return QIcon()
 
 
 def main():
     selftest = "--selftest" in sys.argv
     ensure_dirs()
     app = QApplication(sys.argv)
-    app.setApplicationName("QrintPrint 小印")
+    app.setApplicationName("错题小印")
     app.setOrganizationName("QrintPrint")
+    apply_theme(app)
+    app.setWindowIcon(_app_icon())
 
     window = MainWindow()
+    window.setWindowIcon(_app_icon())
     window.show()
 
     if selftest:

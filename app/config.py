@@ -28,6 +28,26 @@ def ensure_dirs():
         os.makedirs(d, exist_ok=True)
 
 
+def resource_path(name):
+    """定位只读资源（图标等）。
+
+    onefile 打包时资源解压到 sys._MEIPASS，其次是 exe / 源码目录，
+    再次是其中的 img/ 子目录。返回第一个存在的路径；都没有则返回
+    BASE_DIR 下的候选路径（调用方自行判断是否存在）。
+    """
+    roots = []
+    bundle = getattr(sys, "_MEIPASS", None)
+    if bundle:
+        roots.append(bundle)
+    roots.append(BASE_DIR)
+    for root in roots:
+        for rel in (name, os.path.join("img", name)):
+            path = os.path.join(root, rel)
+            if os.path.exists(path):
+                return path
+    return os.path.join(BASE_DIR, name)
+
+
 class Config:
     """简单的 JSON 配置，保存上次端口等设置。"""
 

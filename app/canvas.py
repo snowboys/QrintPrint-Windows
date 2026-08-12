@@ -79,15 +79,16 @@ class CanvasItem(QGraphicsRectItem):
     # ---- 绘制 ----
 
     def paint(self, painter, option, widget=None):
-        painter.setPen(QPen(QColor(200, 200, 200), 1))
+        painter.setPen(QPen(QColor(215, 219, 227), 1))
         painter.setBrush(QBrush(QColor(255, 255, 255)))
         painter.drawRect(self.rect())
         self.draw_content(painter, self.rect())
         if self.isSelected():
-            painter.setPen(QPen(QColor(0, 120, 215), 1, Qt.PenStyle.DashLine))
+            accent = QColor(75, 71, 196)  # theme.ACCENT
+            painter.setPen(QPen(accent, 1, Qt.PenStyle.DashLine))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(self.rect().adjusted(1, 1, -1, -1))
-            painter.setBrush(QBrush(QColor(0, 120, 215)))
+            painter.setBrush(QBrush(accent))
             painter.setPen(QPen(QColor(255, 255, 255), 1))
             for hx, hy in self._handle_centers():
                 painter.drawRect(QRectF(hx - HANDLE / 2, hy - HANDLE / 2,
@@ -253,7 +254,7 @@ class BarcodeCanvasItem(CanvasItem):
         self.data = "QrintPrint"
         self.error_correction = "M"
         self.border = 2
-        self.write_text = True
+        self.write_text = False
 
     def content_image(self):
         img, _ = render_barcode_image(
@@ -292,7 +293,7 @@ class CanvasScene(QGraphicsScene):
 
     def _setup(self):
         self.setSceneRect(0, 0, SCENE_W, self.canvas_height)
-        bg = QBrush(QColor(245, 245, 245))
+        bg = QBrush(QColor(244, 246, 250))  # theme.INSET
         self.setBackgroundBrush(bg)
         self.setItemIndexMethod(QGraphicsScene.ItemIndexMethod.NoIndex)
 

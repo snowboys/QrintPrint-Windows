@@ -1,4 +1,4 @@
-# QrintPrint · 小印热敏打印
+# 错题小印 · Qring Printer
 
 面向 58mm 蓝牙热敏打印机的 Windows程序。
 支持错题、便签、标签打印：文字排版、图片抖动、条码/二维码、自定义画布、
@@ -14,9 +14,10 @@
 
 1. 系统蓝牙中配对打印机（配对后 Windows 会生成一个“传出”的虚拟 COM 口，
    一般是 COM3~COM8 之一）。
-2. 双击 `run.bat`，或运行 'dist\QrintPrint\QrintPrint.exe`。
-3. 顶部选择蓝牙端口（默认 COM3），点「连接」。
-4. 在任一页签排版内容，点「打印」,打印纸可通用喵喵机热敏纸。
+2. 双击 `run.bat`，或运行 `dist\QrintPrint.exe`（单文件，可拷到任意电脑双击运行）。
+3. 在首页点击顶部的打印机卡片，选择你的 Qring 打印机（默认 COM3）。
+4. 从首页的「图片打印 / 文字打印 / 打印条码 / 自定义打印」进入编辑页排版，
+   点「打印」。打印纸可通用喵喵机热敏纸。
 
 依赖已随项目放在 `vendor/` 目录，程序启动时自动加载，**无需安装任何东西**。
 
@@ -45,7 +46,7 @@
 - 模板保存 / 加载 / 重命名 / 删除（含缩略图）
 
 ### 可靠性
-- 电量 / 缺纸 / 开盖 / 过热实时监测（顶部状态灯）
+- 电量 / 纸张 / 温度实时监测（首页底部状态芯片）
 - 打印前自动体检，故障时拦截并给出原因
 - 打印期间暂停状态轮询，避免查询字节混入打印数据流
 - 冷启动自动重连上次设备（连接在后台线程执行、写入带超时，
@@ -57,10 +58,17 @@
 
 ## 打印设置
 
-顶部栏可设置：
+在「我的」页面可设置：
 - 浓度：打印加热强度（0~7，一般用 1）
 - 进纸：打印前走纸点数
 - 出纸：打印后走纸点数
+
+## 界面结构
+
+- 首页：打印机连接卡片 + 四个功能入口（图片 / 文字 / 条码 / 自定义）+ 底部状态芯片
+- 模板：自定义画布与模板的保存 / 加载 / 重命名 / 删除
+- 历史：打印记录与一键重新打印
+- 我的：设备信息（名称 / 型号 / 连接状态）与打印设置
 
 ## 目录结构
 
@@ -71,6 +79,7 @@ QrintPrint-Windows/
 ├── run.bat              # 源码运行脚本
 ├── build.bat            # 一键打包 exe
 ├── requirements.txt
+├── RELEASE_NOTES.md     # 发布说明
 ├── app/
 │   ├── driver.py        # 打印机协议驱动（SPP 串口，写入超时保护）
 │   ├── device.py        # 设备管理：连接/轮询/体检/打印线程
@@ -78,29 +87,31 @@ QrintPrint-Windows/
 │   ├── canvas.py        # 自定义画布
 │   ├── storage.py       # 模板与历史持久化
 │   ├── ui.py            # 主窗口
+│   ├── theme.py         # 视觉主题
 │   └── config.py        # 配置
 ├── vendor/              # 自包含第三方依赖（随项目提供）
 ├── data/                # 运行期数据（自动创建）
 ├── tests/               # 冒烟测试（无需打印机）
 ├── img/                 # 界面截图
-└── dist/QrintPrint/     # 已打包产物（可整体拷贝到其它电脑运行）
+└── dist/QrintPrint.exe   # 已打包产物（单文件，可拷贝到其它电脑运行）
 ```
 
 ## 打包为 exe
 
-项目已随附打包产物：`dist/QrintPrint/QrintPrint.exe`，整个
-`dist/QrintPrint/` 文件夹（exe + `_internal/` + `data/`）可整体拷贝到
-任意 Windows 10/11 64 位电脑直接运行，无需安装 Python 或任何依赖。
+项目已随附打包产物：`dist/QrintPrint.exe`，这是**单个可执行文件**（图标、
+字体等资源全部内置），拷贝这一个文件到任意 Windows 10/11 64 位电脑双击即可
+运行，无需安装 Python 或任何依赖，也无需附带其它文件夹。
 
 重新打包时，双击 `build.bat`，或手动执行：
 
 ```
 pip install pyinstaller
-pyinstaller --noconfirm qrintprint.spec
+pyinstaller --noconfirm --clean qrintprint.spec
 ```
 
-产物在 `dist/QrintPrint/`。打包后数据（配置/模板/历史）自动存放在
-exe 同级的 `data/` 目录，与源码运行方式一致。
+产物为单文件 `dist/QrintPrint.exe`。首次运行时会把内置资源解压到系统临时目录，
+之后启动即恢复正常速度。运行期数据（配置/模板/历史）自动存放在 exe 同级的
+`data/` 目录，与源码运行方式一致。
 
 验证打包产物可正常启动：
 
@@ -121,7 +132,7 @@ QrintPrint.exe --selftest
 
 ## 界面
 
-| <img src="img/文字打印.png"  /> | <img src="img/图片打印.png"/> | <img src="img/二维码.png" /> | <img src="img/打印历史.png"  /> |
+| <img src="img/首页.png" /> | <img src="img/模板.png" /> | <img src="img/历史.png" /> | <img src="img/我的.png" /> |
 
 
 ## 免责声明

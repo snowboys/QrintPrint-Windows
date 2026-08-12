@@ -1,0 +1,19 @@
+# Python 字节码缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller 中间产物与打包输出
+build/
+dist/
+*.manifest
+
+# 运行期数据（配置 / 模板 / 打印历史，均由程序自动生成）
+data/
+
+# 编辑器 / 系统杂项
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
