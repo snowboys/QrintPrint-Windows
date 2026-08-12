@@ -10,6 +10,22 @@ import os
 import sys
 
 
+def _set_windows_app_user_model_id():
+    """设置 Windows AppUserModelID，保证任务栏正确显示/分组图标。
+
+    PySide6/PyInstaller 应用若未显式设置 AppUserModelID，Windows 任务栏
+    可能不显示窗口图标（空白或默认图标）。必须在创建任何窗口前调用。
+    """
+    if sys.platform != "win32":
+        return
+    try:
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "QrintPrint.QringPrinter")
+    except Exception:
+        pass
+
+
 def _setup_vendor():
     """把项目内 vendor/ 加入 sys.path（若存在），使程序无需安装依赖即可运行。"""
     here = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +61,7 @@ def _app_icon():
 
 def main():
     selftest = "--selftest" in sys.argv
+    _set_windows_app_user_model_id()
     ensure_dirs()
     app = QApplication(sys.argv)
     app.setApplicationName("错题小印")
