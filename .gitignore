@@ -10,6 +10,8 @@ dist/
 
 # 运行期数据（配置 / 模板 / 打印历史，均由程序自动生成）
 data/
+vendor/
+
 
 # 编辑器 / 系统杂项
 .vscode/
@@ -17,3 +19,4 @@ data/
 *.swp
 .DS_Store
 Thumbs.db
+*.log
