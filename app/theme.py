@@ -331,6 +331,20 @@ QPushButton#primary:disabled {{
     color: {INK_FAINT};
     border-color: {BORDER};
 }}
+QPushButton#backBtn {{
+    background: transparent;
+    border: none;
+    color: {ACCENT};
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 10px;
+    text-align: left;
+}}
+QPushButton#backBtn:hover {{
+    background: {ACCENT_SOFT};
+    border-radius: 8px;
+    color: {ACCENT_STRONG};
+}}
 
 /* ---- 输入类 ---- */
 QLineEdit, QPlainTextEdit, QTextEdit,

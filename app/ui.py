@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget, QFontComboBox,
 )
 
-from . import theme
+from . import __version__, theme
 from .canvas import (CanvasScene, CanvasView, ImageCanvasItem,
                      BarcodeCanvasItem, TextCanvasItem, render_canvas_image)
 from .config import Config, resource_path
@@ -58,6 +58,15 @@ def _primary(button):
     button.setObjectName("primary")
     button.setCursor(Qt.CursorShape.PointingHandCursor)
     return button
+
+
+def _back_button(main):
+    """编辑页顶部的返回首页按钮。"""
+    b = QPushButton("← 返回首页")
+    b.setObjectName("backBtn")
+    b.setCursor(Qt.CursorShape.PointingHandCursor)
+    b.clicked.connect(lambda: main.show_page(0))
+    return b
 
 
 # ---------------------------------------------------------------------------
@@ -252,6 +261,11 @@ class TextTab(QWidget):
         left.setSpacing(10)
         root.addLayout(left, 3)
 
+        back_row = QHBoxLayout()
+        back_row.addWidget(_back_button(main))
+        back_row.addStretch(1)
+        left.addLayout(back_row)
+
         self.editor = QPlainTextEdit()
         self.editor.setPlaceholderText("在这里输入要打印的文字…\n支持多行，自动换行。")
         self.editor.setPlainText("欢迎使用 QrintPrint 小印\n热敏打印机 58mm")
@@ -388,6 +402,8 @@ class ImageTab(QWidget):
         root.setSpacing(12)
         top = QHBoxLayout()
         top.setSpacing(10)
+        top.addWidget(_back_button(main))
+        top.addSpacing(6)
         self.open_btn = QPushButton("打开图片…")
         self.open_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.open_btn.clicked.connect(self._open)
@@ -506,6 +522,10 @@ class BarcodeTab(QWidget):
         root = QVBoxLayout(self)
         root.setContentsMargins(18, 18, 18, 18)
         root.setSpacing(12)
+        back_row = QHBoxLayout()
+        back_row.addWidget(_back_button(main))
+        back_row.addStretch(1)
+        root.addLayout(back_row)
         form = QFormLayout()
         form.setSpacing(10)
         self.kind_combo = QComboBox()
@@ -632,6 +652,8 @@ class CanvasTab(QWidget):
         root.setSpacing(12)
         bar1 = QHBoxLayout()
         bar1.setSpacing(8)
+        bar1.addWidget(_back_button(main))
+        bar1.addSpacing(6)
         for text, slot in (
                 ("添加文字", lambda: self.scene.add_text_item()),
                 ("添加图片", self._add_image),
@@ -761,11 +783,21 @@ class CanvasTab(QWidget):
         if not tid:
             QMessageBox.information(self, "模板", "没有可加载的模板")
             return
+        self.load_template_by_id(tid)
+
+    def load_template_by_id(self, tid):
+        """按模板 id 加载到画布，并同步模板下拉框；成功返回 True。"""
         data = self.main.template_store.load(tid)
-        if data:
-            self.scene.load_canvas(data["canvas"])
-            self.height_spin.setValue(self.scene.canvas_height)
-            self.main.status_message(f"已加载模板「{data['name']}」")
+        if not data:
+            return False
+        self.scene.load_canvas(data["canvas"])
+        self.height_spin.setValue(self.scene.canvas_height)
+        self._refresh_templates()
+        idx = self.template_combo.findData(tid)
+        if idx >= 0:
+            self.template_combo.setCurrentIndex(idx)
+        self.main.status_message(f"已加载模板「{data['name']}」")
+        return True
 
     def _rename_template(self):
         tid = self._current_template_id()
@@ -1292,7 +1324,7 @@ class HomeTab(QWidget):
             ("🖼", "图片打印", "选择图片", 5),
             ("📝", "文字打印", "TXT文本", 4),
             ("▮▮▮", "打印条码", "条形码/二维码", 6),
-            ("🛠", "自定义打印", "高级设置", 1),
+            ("🛠", "自定义打印", "高级设置", 7),
         ]
         for i, (icon, title, sub, page) in enumerate(tiles):
             card = TileCard(icon, title, sub)
@@ -1310,6 +1342,90 @@ class HomeTab(QWidget):
         status_row.addWidget(self.lights)
         status_row.addStretch(1)
         root.addLayout(status_row)
+
+
+class TemplateTab(QWidget):
+    """模板：展示「自定义打印」保存的模板列表，可打开编辑 / 重命名 / 删除。"""
+
+    def __init__(self, main):
+        super().__init__()
+        self.main = main
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(18, 18, 18, 18)
+        root.setSpacing(12)
+
+        self.list = QListWidget()
+        self.list.setIconSize(QSize(140, 70))
+        self.list.setWordWrap(True)
+        self.list.itemDoubleClicked.connect(lambda _: self._open_current())
+        root.addWidget(self.list, 1)
+
+        row = QHBoxLayout()
+        row.setSpacing(8)
+        for text, slot in (("打开编辑", self._open_current),
+                           ("重命名", self._rename),
+                           ("删除", self._delete)):
+            b = QPushButton(text)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.clicked.connect(slot)
+            row.addWidget(b)
+        row.addStretch(1)
+        root.addLayout(row)
+
+    def refresh(self):
+        self.list.clear()
+        for t in self.main.template_store.list_templates():
+            ts = time.strftime("%Y-%m-%d %H:%M",
+                               time.localtime(t["updated"]))
+            item = QListWidgetItem(f"{t['name']}\n{ts}")
+            thumb = t.get("thumb")
+            if thumb and os.path.exists(thumb):
+                item.setIcon(QPixmap(thumb))
+            item.setData(Qt.ItemDataRole.UserRole, t["id"])
+            self.list.addItem(item)
+        if self.list.count() == 0:
+            hint = QListWidgetItem(
+                "还没有模板\n在「自定义打印」里排版内容并点「保存」，"
+                "模板会出现在这里")
+            hint.setFlags(Qt.ItemFlag.NoItemFlags)
+            hint.setForeground(QColor(theme.INK_FAINT))
+            self.list.addItem(hint)
+
+    def _current_tid(self):
+        it = self.list.currentItem()
+        if it is None:
+            return None
+        return it.data(Qt.ItemDataRole.UserRole)
+
+    def _open_current(self):
+        tid = self._current_tid()
+        if not tid:
+            QMessageBox.information(self, "模板", "请先选择一个模板")
+            return
+        if self.main.canvas_tab.load_template_by_id(tid):
+            self.main.show_page(7)
+
+    def _rename(self):
+        tid = self._current_tid()
+        if not tid:
+            return
+        old = self.main.template_store.load(tid)
+        name, ok = QInputDialog.getText(self, "重命名模板", "新名称",
+                                        text=old["name"] if old else "")
+        if ok and name.strip():
+            self.main.template_store.rename(tid, name.strip())
+            self.refresh()
+
+    def _delete(self):
+        tid = self._current_tid()
+        if not tid:
+            return
+        if QMessageBox.question(self, "删除模板",
+                                "确定删除该模板？") == \
+                QMessageBox.StandardButton.Yes:
+            self.main.template_store.delete(tid)
+            self.refresh()
 
 
 class MyTab(QWidget):
@@ -1351,6 +1467,22 @@ class MyTab(QWidget):
         sform.addRow(_field("出纸"), self.feed_after_spin)
         root.addWidget(set_box)
         root.addStretch(1)
+
+        # 版本与作者
+        foot = QVBoxLayout()
+        foot.setSpacing(2)
+        self.version_label = QLabel(f"版本 {__version__}")
+        self.version_label.setStyleSheet(
+            f"color:{theme.INK_FAINT};font-size:12px;font-weight:600;")
+        self.author_label = QLabel(
+            '<a style="color:%s;text-decoration:none;" '
+            'href="https://github.com/snowboys/QrintPrint-Windows">'
+            "snowboys · GitHub</a>" % theme.ACCENT)
+        self.author_label.setOpenExternalLinks(True)
+        self.author_label.setStyleSheet("font-size:12px;")
+        foot.addWidget(self.version_label)
+        foot.addWidget(self.author_label)
+        root.addLayout(foot)
 
     def set_device(self, name, model, status, connected):
         self.device_name.setText(name or "—")
@@ -1395,17 +1527,18 @@ class MainWindow(QMainWindow):
 
         self.pages = QStackedWidget()
         self.home_tab = HomeTab(self)
-        self.canvas_tab = CanvasTab(self)
+        self.template_tab = TemplateTab(self)
         self.history_tab = HistoryTab(self)
         self.my_tab = MyTab(self)
         self.text_tab = TextTab(self)
         self.image_tab = ImageTab(self)
         self.barcode_tab = BarcodeTab(self)
+        self.canvas_tab = CanvasTab(self)
 
-        # 0 首页 / 1 模板 / 2 历史 / 3 我的 / 4-6 各编辑页
-        for w in (self.home_tab, self.canvas_tab, self.history_tab,
+        # 0 首页 / 1 模板 / 2 历史 / 3 我的 / 4-7 各编辑页
+        for w in (self.home_tab, self.template_tab, self.history_tab,
                   self.my_tab, self.text_tab, self.image_tab,
-                  self.barcode_tab):
+                  self.barcode_tab, self.canvas_tab):
             self.pages.addWidget(w)
         root.addWidget(self.pages, 1)
 
@@ -1471,6 +1604,8 @@ class MainWindow(QMainWindow):
             b.setChecked(False)
         if index < len(self.nav_buttons):
             self.nav_buttons[index].setChecked(True)
+        if index == 1:  # 模板
+            self.template_tab.refresh()
         if index == 2:  # 历史
             self.history_tab.refresh()
 
