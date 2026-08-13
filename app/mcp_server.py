@@ -588,6 +588,14 @@ class _McpRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            length = -1
+        if length < 0 or length > MAX_REQUEST_BYTES:
+            self._send_json(413, {"error": "Request body too large"})
+            return
+        body = self.rfile.read(length)
         if not self._request_target_allowed():
             return
         if urlsplit(self.path).path.rstrip("/") != "/mcp":
@@ -599,14 +607,7 @@ class _McpRequestHandler(BaseHTTPRequestHandler):
             self._send_json(415, {"error": "Content-Type must be application/json"})
             return
         try:
-            length = int(self.headers.get("Content-Length", "0"))
-        except ValueError:
-            length = -1
-        if length < 0 or length > MAX_REQUEST_BYTES:
-            self._send_json(413, {"error": "Request body too large"})
-            return
-        try:
-            payload = json.loads(self.rfile.read(length).decode("utf-8"))
+            payload = json.loads(body.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             self._send_json(200, McpProtocol.error(None, -32700, "Parse error"))
             return
