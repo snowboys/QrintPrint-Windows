@@ -55,6 +55,34 @@
 - 打印历史持久化（含 384 点宽预览与缩略图），一键重新打印
 - 数据目录：`data/`（config.json、templates/、history/）
 
+### MCP Agent 接入
+
+应用可启动一个仅监听 `127.0.0.1` 的 MCP Streamable HTTP 服务，让本机的
+Codex 或其他兼容 AI agent 操作打印机。点击顶部的 `MCP` 按钮，选择端口并启动；
+服务默认关闭，关闭应用时也会一并停止。
+
+弹窗可直接复制 MCP 端点或 Codex 配置。默认端点为
+`http://127.0.0.1:8765/mcp`，对应的项目级 `.codex/config.toml` 配置为：
+
+```toml
+[mcp_servers.qrintprint]
+url = "http://127.0.0.1:8765/mcp"
+default_tools_approval_mode = "writes"
+tool_timeout_sec = 180
+```
+
+重新启动 Codex 后可使用以下工具：
+
+- `get_printer_status`：读取当前连接、电量、故障与打印状态
+- `list_printers`：扫描已配对的 Qring 打印机
+- `connect_printer` / `disconnect_printer`：连接或断开打印机
+- `print_text` / `print_barcode`：提交文字、二维码或一维码打印任务
+- `get_print_job`：按任务 ID 查询打印结果
+
+打印工具会实际消耗热敏纸；示例配置使用 `writes` 审批模式，使 Codex 在执行
+连接、断开和打印等写入操作前请求确认。服务没有监听局域网地址，其他电脑无法
+直接访问。
+
 ## 打印设置
 
 在「我的」页面可设置：
@@ -85,6 +113,7 @@ QrintPrint-Windows/
 │   ├── render.py        # 文字/图片/条码渲染与抖动
 │   ├── canvas.py        # 自定义画布
 │   ├── storage.py       # 模板与历史持久化
+│   ├── mcp_server.py    # 本机 MCP Streamable HTTP 服务与 Agent 工具
 │   ├── ui.py            # 主窗口
 │   ├── theme.py         # 视觉主题
 │   └── config.py        # 配置

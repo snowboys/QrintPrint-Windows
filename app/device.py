@@ -220,6 +220,16 @@ class DeviceManager(QObject):
     def is_connected(self):
         return self.printer is not None
 
+    def status_snapshot(self):
+        """返回不触发串口 I/O 的当前状态快照，供 UI / MCP 查询。"""
+        status = dict(self._last_status)
+        status.update({
+            "connected": self.printer is not None,
+            "port": self.port,
+            "printing": self._printing.is_set(),
+        })
+        return status
+
     def _close_locked(self):
         if self.printer is not None:
             try:
@@ -290,33 +300,46 @@ class DeviceManager(QObject):
         return True, []
 
     def print_job(self, packed, row_bytes, height, feed_before=None,
-                  feed_after=None, thickness=None, timeout=120.0):
+                  feed_after=None, thickness=None, timeout=120.0,
+                  result_callback=None, started_callback=None,
+                  emit_signal=True):
         """
         异步打印光栅数据。成功后 emit printFinished(True, msg)。
         打印期间状态轮询自动暂停，避免查询字节混入数据流。
         """
         if self.printer is None:
-            self.printFinished.emit(False, "打印机未连接")
+            self._report_print_result(
+                False, "打印机未连接", result_callback, emit_signal)
             return
         t = threading.Thread(target=self._print_worker,
                              args=(packed, row_bytes, height, feed_before,
-                                   feed_after, thickness, timeout),
+                                   feed_after, thickness, timeout,
+                                   result_callback, started_callback,
+                                   emit_signal),
                              daemon=True, name="qrint-print")
         t.start()
 
     def _print_worker(self, packed, row_bytes, height, feed_before,
-                      feed_after, thickness, timeout):
+                      feed_after, thickness, timeout, result_callback,
+                      started_callback, emit_signal):
         with self._print_lock:
             self._printing.set()
             try:
+                if started_callback is not None:
+                    try:
+                        started_callback()
+                    except Exception:
+                        pass
                 printer = self.printer
                 if printer is None:
-                    self.printFinished.emit(False, "打印机未连接")
+                    self._report_print_result(
+                        False, "打印机未连接", result_callback, emit_signal)
                     return
                 ok, problems = self.check_ready()
                 if not ok:
-                    self.printFinished.emit(
-                        False, "打印前体检拦截：" + "、".join(problems))
+                    self._report_print_result(
+                        False, "打印前体检拦截：" + "、".join(problems),
+                        result_callback, emit_signal)
                     return
                 with self._io_lock:
                     printer.enable()
@@ -328,11 +351,22 @@ class DeviceManager(QObject):
                     printer.feed(int(feed_after or 0))
                     printer.stop()
                     ok, msg = printer.wait_ack(timeout)
-                self.printFinished.emit(ok, msg)
+                self._report_print_result(
+                    ok, msg, result_callback, emit_signal)
             except Exception as exc:
-                self.printFinished.emit(False, f"打印异常：{exc}")
+                self._report_print_result(
+                    False, f"打印异常：{exc}", result_callback, emit_signal)
             finally:
                 self._printing.clear()
+
+    def _report_print_result(self, ok, message, callback, emit_signal):
+        if callback is not None:
+            try:
+                callback(bool(ok), str(message))
+            except Exception:
+                pass
+        if emit_signal:
+            self.printFinished.emit(bool(ok), str(message))
 
     def shutdown(self):
         self._stop.set()

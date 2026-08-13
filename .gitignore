@@ -21,4 +21,3 @@ vendor/
 Thumbs.db
 *.log
 selftest_log.txt
-qrintprint.spec

@@ -9,7 +9,7 @@ from PySide6.QtCore import QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QBrush, QColor, QFont, QPainter, QPainterPath,
                            QPen, QPixmap)
 from PySide6.QtWidgets import (
-    QButtonGroup, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+    QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog, QDialogButtonBox,
     QFileDialog, QFormLayout, QFrame, QGraphicsView, QGridLayout, QGroupBox,
     QHBoxLayout, QInputDialog, QLabel, QLineEdit, QListWidget,
     QListWidgetItem, QMainWindow, QMessageBox, QPlainTextEdit, QPushButton,
@@ -22,6 +22,7 @@ from .canvas import (CanvasScene, CanvasView, ImageCanvasItem,
                      BarcodeCanvasItem, TextCanvasItem, render_canvas_image)
 from .config import Config, resource_path
 from .device import DeviceManager
+from .mcp_server import McpServer, QrintPrintAgentApi
 from .render import (BARCODE_KINDS, DITHER_ALGORITHMS, is_1d_barcode,
                      pil_to_qimage, prepare_bitmap, render_barcode_image,
                      render_text_image, validate_barcode)
@@ -1493,7 +1494,127 @@ class MyTab(QWidget):
             f"font-weight:700;")
 
 
+class McpDialog(QDialog):
+    """MCP 本地服务控制与客户端配置。"""
+
+    def __init__(self, main, parent=None):
+        super().__init__(parent or main)
+        self.main = main
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, True)
+        self.setWindowTitle("MCP Agent 接入")
+        self.setMinimumWidth(560)
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(20, 18, 20, 18)
+        root.setSpacing(14)
+
+        head = QHBoxLayout()
+        title = QLabel("MCP Agent 接入")
+        title.setStyleSheet(
+            f"color:{theme.INK};font-size:17px;font-weight:800;")
+        self.state_label = QLabel()
+        head.addWidget(title)
+        head.addStretch(1)
+        head.addWidget(self.state_label)
+        root.addLayout(head)
+
+        form = QFormLayout()
+        form.setSpacing(12)
+        self.port_spin = QSpinBox()
+        self.port_spin.setRange(1024, 65535)
+        self.port_spin.setValue(int(main.config.get("mcp_port", 8765)))
+        self.port_spin.valueChanged.connect(self._port_changed)
+        self.endpoint_edit = QLineEdit()
+        self.endpoint_edit.setReadOnly(True)
+        self.endpoint_edit.setText(main.mcp_server.endpoint)
+        bind_label = QLabel("127.0.0.1 · 仅本机")
+        bind_label.setStyleSheet(f"color:{theme.INK_SOFT};")
+        form.addRow(_field("监听端口"), self.port_spin)
+        form.addRow(_field("MCP 端点"), self.endpoint_edit)
+        form.addRow(_field("访问范围"), bind_label)
+        root.addLayout(form)
+
+        copy_row = QHBoxLayout()
+        self.copy_endpoint_btn = QPushButton("复制端点")
+        self.copy_config_btn = QPushButton("复制 Codex 配置")
+        self.copy_endpoint_btn.clicked.connect(self._copy_endpoint)
+        self.copy_config_btn.clicked.connect(self._copy_codex_config)
+        copy_row.addWidget(self.copy_endpoint_btn)
+        copy_row.addWidget(self.copy_config_btn)
+        copy_row.addStretch(1)
+        root.addLayout(copy_row)
+
+        actions = QHBoxLayout()
+        actions.addStretch(1)
+        close_btn = QPushButton("关闭")
+        close_btn.clicked.connect(self.accept)
+        self.toggle_btn = QPushButton()
+        self.toggle_btn.clicked.connect(self._toggle)
+        actions.addWidget(close_btn)
+        actions.addWidget(self.toggle_btn)
+        root.addLayout(actions)
+
+        main.mcpStateChanged.connect(self._on_state_changed)
+        self._refresh()
+
+    def _refresh(self):
+        running = self.main.mcp_server.is_running()
+        self.endpoint_edit.setText(self.main.mcp_server.endpoint)
+        self.port_spin.setEnabled(not running)
+        self.toggle_btn.setText("停止 MCP" if running else "启动 MCP")
+        self.toggle_btn.setObjectName("" if running else "primary")
+        self.toggle_btn.style().unpolish(self.toggle_btn)
+        self.toggle_btn.style().polish(self.toggle_btn)
+        if running:
+            self.state_label.setText("● 运行中")
+            self.state_label.setStyleSheet(
+                f"color:{theme.OK};font-size:12px;font-weight:700;")
+        else:
+            self.state_label.setText("● 已停止")
+            self.state_label.setStyleSheet(
+                f"color:{theme.INK_FAINT};font-size:12px;font-weight:700;")
+
+    def _toggle(self):
+        if self.main.mcp_server.is_running():
+            self.main.mcp_server.stop()
+            self._refresh()
+            return
+        port = self.port_spin.value()
+        self.main.config.set("mcp_port", port)
+        if not self.main.mcp_server.start(port):
+            QMessageBox.critical(
+                self, "MCP 启动失败",
+                "无法启动本地 MCP 服务：\n" + self.main.mcp_server.last_error)
+        self._refresh()
+
+    def _port_changed(self, port):
+        if self.main.mcp_server.is_running():
+            return
+        self.main.mcp_server.port = int(port)
+        self.endpoint_edit.setText(self.main.mcp_server.endpoint)
+
+    def _copy_endpoint(self):
+        QApplication.clipboard().setText(self.main.mcp_server.endpoint)
+        self.main.status_message("MCP 端点已复制")
+
+    def _copy_codex_config(self):
+        endpoint = self.main.mcp_server.endpoint
+        config = (
+            "[mcp_servers.qrintprint]\n"
+            f'url = "{endpoint}"\n'
+            'default_tools_approval_mode = "writes"\n'
+            "tool_timeout_sec = 180\n")
+        QApplication.clipboard().setText(config)
+        self.main.status_message("Codex MCP 配置已复制")
+
+    def _on_state_changed(self, _running, _detail):
+        self._refresh()
+
+
 class MainWindow(QMainWindow):
+    mcpStateChanged = Signal(bool, str)
+    mcpPrintSucceeded = Signal(object, object, str)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("错题小印 · Qring Printer")
@@ -1504,9 +1625,21 @@ class MainWindow(QMainWindow):
         self.template_store = TemplateStore()
         self.history_store = HistoryStore()
         self.device = DeviceManager(self.config)
+        self.mcp_api = QrintPrintAgentApi(
+            self.device, self.config,
+            on_print_success=lambda preview, params, title:
+                self.mcpPrintSucceeded.emit(preview, params, title))
+        self.mcp_server = McpServer(
+            self.mcp_api,
+            port=int(self.config.get("mcp_port", 8765)),
+            server_version=__version__,
+            state_callback=lambda running, detail:
+                self.mcpStateChanged.emit(running, detail))
 
         self._build_ui()
         self._connect_device_signals()
+        self.mcpStateChanged.connect(self._on_mcp_state)
+        self.mcpPrintSucceeded.connect(self._record_mcp_print)
 
         self._pending_print = None
         self._printers = []          # 最近一次扫描到的 Qring 设备
@@ -1595,7 +1728,29 @@ class MainWindow(QMainWindow):
             self.nav_buttons.append(b)
             lay.addWidget(b)
         self.nav_buttons[0].setChecked(True)
+        lay.addSpacing(4)
+        self.mcp_btn = QPushButton("MCP")
+        self.mcp_btn.setObjectName("mcpButton")
+        self.mcp_btn.setProperty("running", False)
+        self.mcp_btn.setFixedWidth(64)
+        self.mcp_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.mcp_btn.setToolTip("管理 AI agent 的 MCP 接入")
+        self.mcp_btn.clicked.connect(self._open_mcp_dialog)
+        lay.addWidget(self.mcp_btn)
         return head
+
+    def _open_mcp_dialog(self):
+        McpDialog(self, self).exec()
+
+    def _on_mcp_state(self, running, detail):
+        self.mcp_btn.setProperty("running", bool(running))
+        self.mcp_btn.setToolTip(
+            f"MCP 运行中 · {self.mcp_server.endpoint}"
+            if running else "管理 AI agent 的 MCP 接入")
+        self.mcp_btn.style().unpolish(self.mcp_btn)
+        self.mcp_btn.style().polish(self.mcp_btn)
+        if detail:
+            self.status_message(detail)
 
     def show_page(self, index):
         """切换主页面；首页/模板/历史/我的同步导航选中态。"""
@@ -1732,5 +1887,14 @@ class MainWindow(QMainWindow):
             self.status_message(f"打印失败：{msg}")
             QMessageBox.warning(self, "打印", msg)
 
+    def _record_mcp_print(self, preview, params, title):
+        """MCP 打印完成后在 Qt 主线程写入历史。"""
+        self.history_store.add(
+            params.get("kind", "print"), title, params, preview)
+        self.status_message(f"MCP 打印成功：{title}")
+        if self.pages.currentIndex() == 2:
+            self.history_tab.refresh()
+
     def shutdown(self):
+        self.mcp_server.stop()
         self.device.shutdown()

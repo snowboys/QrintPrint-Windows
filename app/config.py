@@ -58,6 +58,7 @@ class Config:
         "feed_after": 100,       # 打印后走纸点数
         "poll_interval_s": 3.0,  # 状态轮询间隔
         "auto_reconnect": True,  # 冷启动自动重连上次设备
+        "mcp_port": 8765,        # 本机 MCP Streamable HTTP 端口
         "window_geometry": None,
     }
 

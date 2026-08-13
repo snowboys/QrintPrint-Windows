@@ -193,6 +193,26 @@ QPushButton#navTab:checked {{
     border-bottom: 2px solid {ACCENT};
 }}
 
+QPushButton#mcpButton {{
+    background: {INSET};
+    color: {INK_SOFT};
+    border: 1px solid {BORDER};
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-weight: 800;
+}}
+QPushButton#mcpButton:hover {{
+    background: {ACCENT_SOFT};
+    color: {ACCENT_STRONG};
+    border-color: {ACCENT_LINE};
+}}
+QPushButton#mcpButton[running="true"] {{
+    background: {ACCENT_SOFT};
+    color: {ACCENT_STRONG};
+    border: 1px solid {ACCENT};
+}}
+
 /* ---- 首页连接卡片 ---- */
 QFrame#connectCard {{
     background: {PANEL};
